@@ -100,7 +100,7 @@ var createPolygonStyleFunction = function() {
 };
 
 var vectorPolygons = new ol.layer.Vector({
-  source: new ol.source.GeoJSON({ projection: 'EPSG:3857', url: '/Sources/bootleaf/data/stopplaces.geojson' }),
+  source: new ol.source.GeoJSON({ projection: 'EPSG:3857', url: '/data/stopplaces.geojson' }),
   maxResolution: 200,
   style: createPolygonStyleFunction()
 });
@@ -204,7 +204,7 @@ var createPointStyleFunction = function() {
 var vectorPoints = new ol.layer.Vector({
   source: new ol.source.GeoJSON({
     projection: 'EPSG:3857',
-    url: '/Sources/bootleaf/data/quays.geojson'
+    url: '/data/quays.geojson'
   }),
   style: createPointStyleFunction(),
   maxResolution: 2
