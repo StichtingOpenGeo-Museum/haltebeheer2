@@ -281,6 +281,7 @@ select.getFeatures().on('change:length', function(e) {
                 }
             }
         }
+    	$('#sidebar').show();
     }
 });
 
