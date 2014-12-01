@@ -107,28 +107,36 @@ var vectorPolygons = new ol.layer.Vector({
 
 function selectQuay(id) {
     var features = vectorPoints.getSource().getFeatures();
+    if (features !== undefined && features.length > 0 && features[0].get('quaycode') == id) alert('hoi');
+
     for (var i = 0; i < features.length; i++) {
         if (features[i].get('quaycode') == id) {
             select.getFeatures().clear();
             select.getFeatures().push(features[i]);
             map.getView().fitExtent(features[i].getGeometry().getExtent(), map.getSize());
 
+	    window.location = '/#'+id;
             return;
         }
     }
+    window.location = '/';
 }
 
 function selectStopPlace(id) {
     var features = vectorPolygons.getSource().getFeatures();
+    if (features !== undefined && features.length > 0 && features[0].get('stopplacecode') == id) return;
+
     for (var i = 0; i < features.length; i++) {
         if (features[i].get('stopplacecode') == id) {
             select.getFeatures().clear();
             select.getFeatures().push(features[i]);
             map.getView().fitExtent(features[i].getGeometry().getExtent(), map.getSize());
 
+	    window.location = '/#'+id;
             return;
         }
     }
+    window.location = '/';
 }
 
 function addFeatures() {
@@ -244,7 +252,6 @@ select.getFeatures().on('change:length', function(e) {
             if (feature.get('quaycode') === undefined) {
                 $("#feature-name").text(feature.get('publicname'));
                 var keys = feature.getKeys();
-                $("#feature-name").text(feature.get('publicname'));
 
                 for (k = 0; k < keys.length; k++) {
                     var val = feature.get(keys[k]);
@@ -254,6 +261,8 @@ select.getFeatures().on('change:length', function(e) {
                 }
 
                 var stopplacecode = feature.get('stopplacecode');
+	    	window.location = '/#'+stopplacecode;
+
                 $("#feature-list tbody").append('<tr class="feature-row" id="'+stopplacecode+'"><td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/museum.png"></td><td class="feature-name">'+stopplacecode+'</td><td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td></tr>');
 
                 for (var j = 0; j < quaySearch.length; j++) {
@@ -263,6 +272,7 @@ select.getFeatures().on('change:length', function(e) {
 
            } else {
                 var quaycode = feature.get('quaycode');
+	    	window.location = '/#'+quaycode;
                 var keys = feature.getKeys();
                 $("#feature-name").text(feature.get('publicname'));
 
@@ -308,7 +318,21 @@ var map = new ol.Map({
 
 setTimeout(function() {
     if (quaySearch.length == 0) initTypeAhead();
-}, 5000);
+    var args = window.location.href.split("#");
+    if (args.length > 0) {
+    	sidebarClick(args[1]);
+    }
+	
+	$(window).bind('hashchange', function() {
+	    if (quaySearch.length == 0) initTypeAhead();
+	    var args = window.location.href.split("#");
+	    if (args.length > 0) {
+		sidebarClick(args[1]);
+	    }
+	});
+
+}, 4000);
+
 
 /**
  * @param {number} n The max number of characters to keep.
