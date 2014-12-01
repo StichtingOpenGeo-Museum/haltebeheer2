@@ -300,7 +300,8 @@ var map = new ol.Map({
   view: new ol.View({
     center: [547619, 6825101],
     zoom: 9,
-    minZoom: 9
+    minZoom: 9,
+    maxZoom: 19
   })
 });
 
