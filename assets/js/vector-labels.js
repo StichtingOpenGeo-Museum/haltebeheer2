@@ -77,6 +77,29 @@ function calculateRadius(feature, resolution) {
 }
 
 // Polygons
+var createPlaceStyleFunction = function() {
+  return function(feature, resolution) {
+    var style = new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'green',
+        width: 1
+      }),
+      fill: new ol.style.Fill({
+        color: 'rgba(0, 255, 0, 0.1)'
+      }),
+      image: new ol.style.Circle({
+        radius: calculateRadius(feature, resolution),
+        fill: new ol.style.Fill({color: 'rgba(255, 0, 0, 0.1)'}),
+        stroke: new ol.style.Stroke({color: 'red', width: 1})
+      }),
+      text: createTextStyle(feature, resolution),
+    }
+    );
+    return [style];
+  };
+};
+
+// Polygons
 var createPolygonStyleFunction = function() {
   return function(feature, resolution) {
     var style = new ol.style.Style({
@@ -105,6 +128,12 @@ var vectorPolygons = new ol.layer.Vector({
   style: createPolygonStyleFunction()
 });
 
+var vectorPlaces = new ol.layer.Vector({
+  source: new ol.source.GeoJSON({ projection: 'EPSG:3857', url: '/data/places.geojson' }),
+  maxResolution: 200,
+  style: createPlaceStyleFunction()
+});
+
 function selectQuay(id) {
     var features = vectorPoints.getSource().getFeatures();
     if (features !== undefined && features.length > 0 && features[0].get('quaycode') == id) alert('hoi');
@@ -119,7 +148,7 @@ function selectQuay(id) {
             return;
         }
     }
-    window.location = '/';
+    // window.location = '/';
 }
 
 function selectStopPlace(id) {
@@ -136,10 +165,36 @@ function selectStopPlace(id) {
             return;
         }
     }
-    window.location = '/';
+    // window.location = '/';
+}
+
+function selectPlace(id) {
+    var features = vectorPlace.getSource().getFeatures();
+    if (features !== undefined && features.length > 0 && features[0].get('placecode') == id) return;
+
+    for (var i = 0; i < features.length; i++) {
+        if (features[i].get('placecode') == id) {
+            select.getFeatures().clear();
+            select.getFeatures().push(features[i]);
+            map.getView().fitExtent(features[i].getGeometry().getExtent(), map.getSize());
+
+	    window.location = '/#'+id;
+            return;
+        }
+    }
+    // window.location = '/';
 }
 
 function addFeatures() {
+    vectorPlaces.getSource().forEachFeature(function(feature) {
+        stopplaceSearch.push({
+        name: feature.get('publicname'),
+        town: feature.get('town'),
+        stopplacecode: feature.get('placecode'),
+        source: "places",
+        coordinates: feature.get('geometry').getCoordinates()
+        });
+    });
     vectorPolygons.getSource().forEachFeature(function(feature) {
         stopplaceSearch.push({
         name: feature.get('publicname'),
@@ -155,7 +210,7 @@ function addFeatures() {
         name: feature.get('publicname'),
         town: feature.get('town'),
         quaycode: feature.get('quaycode'),
-        stopplacecode: feature.get('stopplacecoderef'),
+        stopplacecode: feature.get('stopplacecode'),
         source: "quays",
         coordinates: feature.get('geometry').getCoordinates()
         });
@@ -249,6 +304,7 @@ select.getFeatures().on('change:length', function(e) {
         // this means there is at least 1 feature selected
         for (var i = 0; i < e.target.getArray().length; i++) {
             var feature = e.target.item(i);
+	    	/* TODO add places */
             if (feature.get('quaycode') === undefined) {
                 $("#feature-name").text(feature.get('publicname'));
                 var keys = feature.getKeys();
@@ -285,7 +341,7 @@ select.getFeatures().on('change:length', function(e) {
 
                 $("#feature-list tbody").append('<tr class="feature-row" id="'+quaycode+'"><td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/theater.png"></td><td class="feature-name">'+quaycode+'</td><td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td></tr>');
 
-                var stopplacecode = feature.get('stopplacecoderef');
+                var stopplacecode = feature.get('stopplacecode');
                 if (stopplacecode !== undefined) {
                     $("#feature-list tbody").append('<tr class="feature-row" id="'+stopplacecode+'"><td style="vertical-align: middle;"><img width="16" height="18" src="assets/img/museum.png"></td><td class="feature-name">'+stopplacecode+'</td><td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td></tr>');
                 }
@@ -304,6 +360,7 @@ var map = new ol.Map({
       }),
       opacity: 0.2
     }),
+    vectorPlaces,
     vectorPolygons,
     vectorPoints
   ],
@@ -316,7 +373,8 @@ var map = new ol.Map({
   })
 });
 
-setTimeout(function() {
+
+function init_search() {
     if (quaySearch.length == 0) initTypeAhead();
     var args = window.location.href.split("#");
     if (args.length > 0) {
@@ -324,14 +382,17 @@ setTimeout(function() {
     }
 	
 	$(window).bind('hashchange', function() {
-	    if (quaySearch.length == 0) initTypeAhead();
 	    var args = window.location.href.split("#");
 	    if (args.length > 0) {
 		sidebarClick(args[1]);
 	    }
 	});
+}
 
-}, 4000);
+setTimeout(function waitLoaded() {
+   if (vectorPoints.getSource().getFeatures() !== undefined) setTimeout (init_search, 500);
+   else setTimeout (waitLoaded, 500); 
+}, 500);
 
 
 /**

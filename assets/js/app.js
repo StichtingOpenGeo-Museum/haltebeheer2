@@ -51,6 +51,8 @@ $("#sidebar-hide-btn").click(function() {
 });
 
 function sidebarClick(id) {
+  if (id === undefined) return;
+
   if (id.charAt(3) == 'S') {
      selectStopPlace(id);
   } else if (id.charAt(3) == 'Q') {
